@@ -1,0 +1,242 @@
+/* Songlap Math Worksheet Generator — styles
+   Brand: deep teal gradient (#0f2027 → #2c5364), gold highlights (#ffd166).
+   Same font stack and clean look as the Puzzle Book Generator. */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+  background: #eef3f5;
+  color: #14232b;
+}
+
+/* ---------- Access gate ---------- */
+#lock-screen {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  padding: 20px;
+}
+#lock-screen[hidden] { display: none; }
+.lock-card {
+  background: #ffffff; border-radius: 16px; padding: 36px 32px;
+  max-width: 400px; width: 100%; text-align: center;
+  box-shadow: 0 18px 50px rgba(0,0,0,.45);
+  border-top: 6px solid #ffd166;
+}
+.lock-logo { font-size: 52px; }
+.lock-card h1 { margin: 8px 0 6px; font-size: 24px; color: #0f2027; }
+.lock-sub { color: #48626e; margin: 0 0 20px; line-height: 1.45; }
+#lock-form { display: flex; flex-direction: column; gap: 10px; }
+#lock-name, #lock-input {
+  padding: 12px 14px; font-size: 16px;
+  border: 2px solid #c8d6dc; border-radius: 10px;
+}
+#lock-input { letter-spacing: 1px; text-transform: uppercase; }
+#lock-name:focus, #lock-input:focus { outline: none; border-color: #2c5364; }
+#lock-submit:disabled { opacity: .55; cursor: wait; }
+.lock-error { color: #c0392b; font-weight: 600; margin: 14px 0 0; }
+.lock-note { color: #7d97a1; font-size: 13px; margin: 16px 0 0; }
+
+/* ---------- License bar ---------- */
+.license-bar {
+  background: #0f2027; color: #ffd166; text-align: center;
+  font-size: 13px; font-weight: 600; letter-spacing: .4px;
+  padding: 7px 12px;
+}
+.license-bar[hidden] { display: none; }
+
+/* ---------- Header / tabs ---------- */
+.site-header {
+  background: linear-gradient(90deg, #0f2027, #2c5364);
+  color: #fff; padding: 16px 20px;
+  border-bottom: 4px solid #ffd166;
+}
+.header-inner {
+  max-width: 1180px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-icon { font-size: 36px; }
+.brand-name { font-size: 24px; font-weight: 800; letter-spacing: 3px; color: #ffd166; }
+.brand-tag { font-size: 14px; opacity: .92; }
+.header-note { font-size: 13px; opacity: .8; max-width: 560px; }
+
+.tabs {
+  max-width: 1180px; margin: 18px auto 0; padding: 0 20px;
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.tab {
+  border: 2px solid #2c5364; background: #fff; color: #2c5364;
+  padding: 9px 18px; border-radius: 999px; font-size: 15px; font-weight: 700; cursor: pointer;
+}
+.tab:hover { background: #e3edf1; }
+.tab.active { background: #2c5364; color: #ffd166; }
+.tab-book.active { background: #0f2027; }
+
+/* ---------- Layout / cards ---------- */
+.layout { max-width: 1180px; margin: 0 auto; padding: 18px 20px 30px; }
+.panel { display: grid; grid-template-columns: 340px 1fr; gap: 18px; align-items: start; }
+.panel[hidden] { display: none; }
+.card {
+  background: #fff; border-radius: 14px; padding: 20px;
+  box-shadow: 0 3px 14px rgba(15,32,39,.10);
+}
+.controls h2 { margin: 0 0 14px; color: #0f2027; font-size: 20px; }
+.controls label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 14px; color: #33505c; }
+.controls label.check { display: flex; align-items: center; gap: 9px; cursor: pointer; }
+.controls label.check input { width: auto; margin: 0; }
+.controls input[type="text"], .controls input[type="number"],
+.controls select, .controls textarea {
+  display: block; width: 100%; margin-top: 6px;
+  padding: 9px 11px; font-size: 14px; font-family: inherit;
+  border: 1.5px solid #c8d6dc; border-radius: 9px; background: #fbfdfe;
+}
+.controls input:focus, .controls select:focus, .controls textarea:focus {
+  outline: none; border-color: #2c5364;
+}
+.count-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 10px; }
+.btn {
+  border: 2px solid #2c5364; background: #fff; color: #2c5364;
+  padding: 9px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.btn:hover:not(:disabled) { background: #e3edf1; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-primary { background: linear-gradient(90deg, #0f2027, #2c5364); color: #fff; border-color: #0f2027; }
+.btn-primary:hover:not(:disabled) { background: linear-gradient(90deg, #2c5364, #0f2027); }
+.btn-gold { background: #ffd166; border-color: #e0aa2e; color: #14232b; }
+.btn-gold:hover:not(:disabled) { background: #ffca3a; }
+.hint { font-size: 13px; color: #48626e; line-height: 1.5; margin: 6px 0 0; }
+.stage { min-height: 300px; }
+.output .placeholder { color: #7d97a1; text-align: center; padding: 60px 10px; }
+
+.site-footer { text-align: center; color: #7d97a1; font-size: 13px; padding: 0 20px 26px; }
+
+/* ---------- Worksheet (shared screen + book) ---------- */
+.wsheet { background: #fff; padding: 6px 4px; max-width: 860px; margin: 0 auto; }
+.ws-head {
+  display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 8px 18px;
+  border-bottom: 3px solid #0f2027; padding-bottom: 9px; margin-bottom: 10px;
+}
+.ws-title { font-size: 23px; margin: 0; color: #0f2027; }
+.ws-meta { display: flex; gap: 20px; flex-wrap: wrap; font-size: 14px; font-weight: 600; color: #33505c; }
+.fill-line { display: inline-block; border-bottom: 1.5px solid #7d97a1; vertical-align: bottom; }
+.fill-name { min-width: 170px; }
+.fill-date { min-width: 110px; }
+.fill-score { min-width: 56px; }
+.ws-instructions { font-size: 14px; color: #48626e; margin: 0 0 16px; }
+.prob-num { font-size: 13px; font-weight: 700; color: #7d97a1; }
+.answer-line {
+  display: inline-block; min-width: 110px; border-bottom: 1.5px solid #7d97a1;
+  color: #2a7f62; font-weight: 700; padding: 0 6px; text-align: center;
+}
+
+/* vertical arithmetic */
+.prob-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 26px 34px; padding: 4px 2px;
+}
+.vprob { width: 118px; margin: 0 auto; font-variant-numeric: tabular-nums; }
+.vp-row { display: flex; align-items: baseline; }
+.vp-row .prob-num { width: 30px; flex: none; }
+.vp-a, .vp-b {
+  margin-left: auto; font-size: 21px; font-weight: 600; letter-spacing: 3px; color: #14232b;
+}
+.vp-op { font-size: 21px; font-weight: 700; color: #14232b; padding-left: 30px; }
+.vp-rule { border-bottom: 2.5px solid #14232b; margin: 4px 0 2px; }
+.vp-answer {
+  min-height: 27px; text-align: right; font-size: 21px; font-weight: 700;
+  letter-spacing: 3px; color: #2a7f62;
+}
+
+/* stacked problem lists (money / word) */
+.prob-list { display: grid; gap: 24px; padding: 4px 2px; }
+.money-prob .prob-num, .word-prob .prob-num { margin-right: 6px; }
+.money-visual { margin: 6px 0 4px 30px; }
+.money-svg { max-width: 100%; height: auto; }
+.money-prompt { font-size: 16.5px; margin-left: 30px; }
+.money-add { font-size: 19px; font-weight: 600; }
+
+/* fractions */
+.frac-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 26px 30px; padding: 4px 2px;
+}
+.frac-prob { text-align: center; }
+.frac-prob .prob-num { display: block; text-align: left; margin-bottom: 6px; }
+.frac-svg { max-width: 100%; height: auto; }
+.frac {
+  display: inline-flex; flex-direction: column; text-align: center;
+  vertical-align: middle; margin: 0 3px; font-size: 19px; font-weight: 600; line-height: 1.25;
+}
+.frac-num { border-bottom: 2px solid #14232b; padding: 0 9px; }
+.frac-den { padding: 0 9px; }
+.frac-blank { margin-top: 8px; }
+.frac-eq { font-size: 20px; padding-top: 14px; }
+.frac-solution { color: #2a7f62; font-weight: 700; margin-top: 6px; font-size: 17px; }
+.frac-solution-inline { color: #2a7f62; font-weight: 700; }
+
+/* word problems */
+.word-prob p { margin: 0 0 4px; font-size: 15.5px; line-height: 1.55; }
+.workspace-lines { margin: 4px 0 8px 30px; }
+.workspace-lines div { border-bottom: 1.5px solid #c8d6dc; height: 27px; }
+.word-answer { margin-left: 30px; font-weight: 600; }
+.word-answer .answer-line { min-width: 130px; }
+
+/* answer key block (screen, under a worksheet) */
+.akey { max-width: 860px; margin: 22px auto 0; border-top: 3px double #2c5364; padding-top: 12px; }
+.akey h3 { margin: 0 0 10px; color: #0f2027; font-size: 18px; }
+.akey-list {
+  columns: 3; column-gap: 34px; margin: 0; padding-left: 22px;
+  font-size: 14.5px; line-height: 1.9; font-variant-numeric: tabular-nums;
+}
+.akey-list li { break-inside: avoid; }
+
+/* ---------- Book preview (screen) ---------- */
+#book-preview { background: #37474f; padding: 28px 12px; }
+#book-preview[hidden] { display: none; }
+.book-page {
+  background: #fff; margin: 0 auto 26px; position: relative; overflow: hidden;
+  box-shadow: 0 6px 28px rgba(0,0,0,.45); color: #14232b;
+  display: flex; flex-direction: column;
+}
+.book-page .page-body { flex: 1; }
+.book-page .page-footer {
+  font-size: 11px; color: #8aa0a9; text-align: center; margin: 12px 0 0;
+  border-top: 1px solid #e1eaed; padding-top: 8px;
+}
+.worksheet-label {
+  font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+  color: #b98a1d; margin: 0 0 10px;
+}
+.book-page .wsheet { max-width: 100%; padding: 0; }
+.book-page .akey { max-width: 100%; border-top: none; margin-top: 0; padding-top: 0; }
+.book-page .akey h3 { display: none; }
+.book-page .prob-grid { gap: 20px 26px; }
+.cover-page, .divider-page { align-items: center; justify-content: center; text-align: center; }
+.cover-inner { margin: auto; }
+.cover-puzzle-icon { font-size: 64px; }
+.cover-title { font-size: 34px; margin: 10px 0 8px; color: #0f2027; line-height: 1.2; }
+.cover-author { font-size: 17px; color: #33505c; margin: 0 0 18px; }
+.cover-count { font-size: 14px; color: #48626e; }
+.cover-brand { margin-top: 34px; letter-spacing: 4px; font-weight: 800; color: #b98a1d; font-size: 15px; }
+
+/* ---------- Print: only the book / print sheet, at page size ---------- */
+@media print {
+  body { background: #fff; }
+  #app, #lock-screen { display: none !important; }
+  #book-preview { display: block !important; background: #fff; padding: 0; }
+  .book-page {
+    margin: 0; box-shadow: none;
+    page-break-after: always; break-after: page;
+  }
+  .book-page:last-child { page-break-after: auto; break-after: auto; }
+}
+
+@media (max-width: 880px) {
+  .panel { grid-template-columns: 1fr; }
+  .header-note { display: none; }
+  .akey-list { columns: 2; }
+}

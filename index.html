@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Math Worksheet Generator — Songlap Deals</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ============ ACCESS GATE ============ -->
+<div id="lock-screen">
+  <div class="lock-card">
+    <div class="lock-logo">🧮</div>
+    <h1>Math Worksheet Generator</h1>
+    <p class="lock-sub">A Songlap Deals tool for teachers, homeschoolers &amp; KDP publishers.<br>
+    Enter your name and your access code to unlock.</p>
+    <form id="lock-form">
+      <input type="text" id="lock-name" placeholder="Your name" autocomplete="name" spellcheck="false">
+      <input type="text" id="lock-input" placeholder="Your access code" autocomplete="off"
+             autocapitalize="characters" spellcheck="false">
+      <button type="submit" class="btn btn-gold" id="lock-submit">Unlock</button>
+    </form>
+    <p id="lock-error" class="lock-error" hidden></p>
+    <p class="lock-note">Your name and code were included with your purchase delivery.</p>
+  </div>
+</div>
+
+<!-- ============ APP (hidden until unlocked) ============ -->
+<div id="app" hidden>
+
+<div id="license-bar" class="license-bar" hidden>Licensed to: <span id="license-name"></span> · <span id="license-code"></span></div>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand">
+      <span class="brand-icon">🧮</span>
+      <div>
+        <div class="brand-name">SONGLAP DEALS</div>
+        <div class="brand-tag">Math Worksheet Generator</div>
+      </div>
+    </div>
+    <div class="header-note">Addition · Subtraction · Multiplication · Division · Mixed · Money · Fractions · Word Problems → print-ready worksheets with answer keys</div>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-tab="addition">Addition</button>
+  <button class="tab" data-tab="subtraction">Subtraction</button>
+  <button class="tab" data-tab="multiplication">Multiplication</button>
+  <button class="tab" data-tab="division">Division</button>
+  <button class="tab" data-tab="mixed">Mixed</button>
+  <button class="tab" data-tab="money">Money</button>
+  <button class="tab" data-tab="fractions">Fractions</button>
+  <button class="tab" data-tab="word">Word Problems</button>
+  <button class="tab tab-book" data-tab="book">📕 Book Builder</button>
+</nav>
+
+<main class="layout">
+
+  <!-- ===== ADDITION ===== -->
+  <section class="panel" id="panel-addition">
+    <div class="controls card">
+      <h2>Addition</h2>
+      <label>Difficulty
+        <select id="addition-level">
+          <option value="1digit">1-digit</option>
+          <option value="2digit-noreg">2-digit — no regrouping</option>
+          <option value="2digit-reg" selected>2-digit — with regrouping</option>
+          <option value="3digit">3-digit</option>
+        </select>
+      </label>
+      <label>Questions per worksheet
+        <select id="addition-count">
+          <option value="10">10</option>
+          <option value="12">12</option>
+          <option value="20" selected>20</option>
+          <option value="25">25</option>
+        </select>
+      </label>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="addition-generate">Generate</button>
+        <button class="btn" id="addition-key" disabled>Show Answer Key</button>
+        <button class="btn" id="addition-print" disabled>🖨 Print / PDF</button>
+        <button class="btn" id="addition-png" disabled>⬇ PNG</button>
+      </div>
+      <p class="hint" id="addition-status"></p>
+    </div>
+    <div class="stage card">
+      <div id="addition-output" class="output"><p class="placeholder">Choose a difficulty and click Generate.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== SUBTRACTION ===== -->
+  <section class="panel" id="panel-subtraction" hidden>
+    <div class="controls card">
+      <h2>Subtraction</h2>
+      <label>Difficulty
+        <select id="subtraction-level">
+          <option value="1digit">1-digit</option>
+          <option value="2digit-noreg">2-digit — no regrouping</option>
+          <option value="2digit-reg" selected>2-digit — with regrouping</option>
+          <option value="3digit">3-digit</option>
+        </select>
+      </label>
+      <label>Questions per worksheet
+        <select id="subtraction-count">
+          <option value="10">10</option>
+          <option value="12">12</option>
+          <option value="20" selected>20</option>
+          <option value="25">25</option>
+        </select>
+      </label>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="subtraction-generate">Generate</button>
+        <button class="btn" id="subtraction-key" disabled>Show Answer Key</button>
+        <button class="btn" id="subtraction-print" disabled>🖨 Print / PDF</button>
+        <button class="btn" id="subtraction-png" disabled>⬇ PNG</button>
+      </div>
+      <p class="hint" id="subtraction-status">Answers are never negative.</p>
+    </div>
+    <div class="stage card">
+      <div id="subtraction-output" class="output"><p class="placeholder">Choose a difficulty and click Generate.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== MULTIPLICATION ===== -->
+  <section class="panel" id="panel-multiplication" hidden>
+    <div class="controls card">
+      <h2>Multiplication</h2>
+      <label>Times tables
+        <select id="multiplication-range">
+          <option value="2-5">Tables 2–5</option>
+          <option value="2-9" selected>Tables 2–9</option>
+          <option value="2-12">Tables 2–12</option>
+          <option value="2x1">2-digit × 1-digit</option>
+        </select>
+      </label>
+      <label>Questions per worksheet
+        <select id="multiplication-count">
+          <option value="10">10</option>
+          <option value="12">12</option>
+          <option value="20" selected>20</option>
+          <option value="25">25</option>
+        </select>
+      </label>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="multiplication-generate">Generate</button>
+        <button class="btn" id="multiplication-key" disabled>Show Answer Key</button>
+        <button class="btn" id="multiplication-print" disabled>🖨 Print / PDF</button>
+        <button class="btn" id="multiplication-png" disabled>⬇ PNG</button>
+      </div>
+      <p class="hint" id="multiplication-status"></p>
+    </div>
+    <div class="stage card">
+      <div id="multiplication-output" class="output"><p class="placeholder">Choose a range and click Generate.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== DIVISION ===== -->
+  <section class="panel" id="panel-division" hidden>
+    <div class="controls card">
+      <h2>Division</h2>
+      <label>Times tables
+        <select id="division-range">
+          <option value="2-5">Tables 2–5</option>
+          <option value="2-9" selected>Tables 2–9</option>
+          <option value="2-12">Tables 2–12</option>
+        </select>
+      </label>
+      <label class="check">
+        <input type="checkbox" id="division-remainders"> Include remainders
+      </label>
+      <label>Questions per worksheet
+        <select id="division-count">
+          <option value="10">10</option>
+          <option value="12">12</option>
+          <option value="20" selected>20</option>
+          <option value="25">25</option>
+        </select>
+      </label>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="division-generate">Generate</button>
+        <button class="btn" id="division-key" disabled>Show Answer Key</button>
+        <button class="btn" id="division-print" disabled>🖨 Print / PDF</button>
+        <button class="btn" id="division-png" disabled>⬇ PNG</button>
+      </div>
+      <p class="hint" id="division-status">Division is exact (no remainders) unless you tick the box.</p>
+    </div>
+    <div class="stage card">
+      <div id="division-output" class="output"><p class="placeholder">Choose a range and click Generate.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== MIXED ===== -->
+  <section class="panel" id="panel-mixed" hidden>
+    <div class="controls card">
+      <h2>Mixed Operations</h2>
+      <label>Difficulty
+        <select id="mixed-level">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </label>
+      <label>Questions per worksheet
+        <select id="mixed-count">
+          <option value="10">10</option>
+          <option value="12">12</option>
+          <option value="20" selected>20</option>
+          <option value="25">25</option>
+        </select>
+      </label>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="mixed-generate">Generate</button>
+        <button class="btn" id="mixed-key" disabled>Show Answer Key</button>
+        <button class="btn" id="mixed-print" disabled>🖨 Print / PDF</button>
+        <button class="btn" id="mixed-png" disabled>⬇ PNG</button>
+      </div>
+      <p class="hint" id="mixed-status">A random mix of + − × ÷ at the chosen difficulty.</p>
+    </div>
+    <div class="stage card">
+      <div id="mixed-output" class="output"><p class="placeholder">Choose a difficulty and click Generate.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== MONEY ===== -->
+  <section class="panel" id="panel-money" hidden>
+    <div class="controls card">
+      <h2>Money (USD)</h2>
+      <label>Problem type
+        <select id="money-mode">
+          <option value="mixed" selected>Mixed</option>
+          <option value="count">Count the money</option>
+          <option value="add">Money addition</option>
+        </select>
+      </label>
+      <label>Questions per worksheet
+        <select id="money-count">
+          <option value="10" selected>10</option>
+          <option value="12">12</option>
+          <option value="20">20</option>
+          <option value="25">25</option>
+        </select>
+      </label>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="money-generate">Generate</button>
+        <button class="btn" id="money-key" disabled>Show Answer Key</button>
+        <button class="btn" id="money-print" disabled>🖨 Print / PDF</button>
+        <button class="btn" id="money-png" disabled>⬇ PNG</button>
+      </div>
+      <p class="hint" id="money-status">Coins: quarter 25¢ · dime 10¢ · nickel 5¢ · penny 1¢. Bills: $1, $5, $10.</p>
+    </div>
+    <div class="stage card">
+      <div id="money-output" class="output"><p class="placeholder">Choose a type and click Generate.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== FRACTIONS ===== -->
+  <section class="panel" id="panel-fractions" hidden>
+    <div class="controls card">
+      <h2>Fractions</h2>
+      <label>Problem type
+        <select id="fractions-mode">
+          <option value="mixed" selected>Mixed</option>
+          <option value="identify">What fraction is shaded?</option>
+          <option value="equiv">Equivalent fractions</option>
+          <option value="add">Adding fractions (same denominator)</option>
+        </select>
+      </label>
+      <label>Questions per worksheet
+        <select id="fractions-count">
+          <option value="10" selected>10</option>
+          <option value="12">12</option>
+          <option value="20">20</option>
+          <option value="25">25</option>
+        </select>
+      </label>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="fractions-generate">Generate</button>
+        <button class="btn" id="fractions-key" disabled>Show Answer Key</button>
+        <button class="btn" id="fractions-print" disabled>🖨 Print / PDF</button>
+        <button class="btn" id="fractions-png" disabled>⬇ PNG</button>
+      </div>
+      <p class="hint" id="fractions-status"></p>
+    </div>
+    <div class="stage card">
+      <div id="fractions-output" class="output"><p class="placeholder">Choose a type and click Generate.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== WORD PROBLEMS ===== -->
+  <section class="panel" id="panel-word" hidden>
+    <div class="controls card">
+      <h2>Word Problems</h2>
+      <label>Questions per worksheet
+        <select id="word-count">
+          <option value="10" selected>10</option>
+          <option value="12">12</option>
+          <option value="20">20</option>
+          <option value="25">25</option>
+        </select>
+      </label>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="word-generate">Generate</button>
+        <button class="btn" id="word-key" disabled>Show Answer Key</button>
+        <button class="btn" id="word-print" disabled>🖨 Print / PDF</button>
+        <button class="btn" id="word-png" disabled>⬇ PNG</button>
+      </div>
+      <p class="hint" id="word-status">One-step + − × ÷ stories with lined workspace under each problem.</p>
+    </div>
+    <div class="stage card">
+      <div id="word-output" class="output"><p class="placeholder">Click Generate for a fresh set of word problems.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== BOOK BUILDER ===== -->
+  <section class="panel panel-book" id="panel-book" hidden>
+    <div class="controls card">
+      <h2>Book Builder</h2>
+      <label>Book title
+        <input type="text" id="bk-title" value="My Math Worksheet Book">
+      </label>
+      <label>Author
+        <input type="text" id="bk-author" value="">
+      </label>
+      <label>Page size
+        <select id="bk-size">
+          <option value="letter" selected>Letter (8.5 × 11 in)</option>
+          <option value="a4">A4 (210 × 297 mm)</option>
+        </select>
+      </label>
+      <label>Questions per worksheet
+        <select id="bk-per">
+          <option value="10">10</option>
+          <option value="12">12</option>
+          <option value="20" selected>20</option>
+          <option value="25">25</option>
+        </select>
+      </label>
+      <label>Arithmetic difficulty
+        <select id="bk-difficulty">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </label>
+      <label class="check">
+        <input type="checkbox" id="bk-remainders"> Division with remainders
+      </label>
+      <div class="count-grid">
+        <label>Addition <input type="number" id="bk-count-addition" min="0" max="100" value="2"></label>
+        <label>Subtraction <input type="number" id="bk-count-subtraction" min="0" max="100" value="2"></label>
+        <label>Multiplication <input type="number" id="bk-count-multiplication" min="0" max="100" value="2"></label>
+        <label>Division <input type="number" id="bk-count-division" min="0" max="100" value="2"></label>
+        <label>Mixed <input type="number" id="bk-count-mixed" min="0" max="100" value="1"></label>
+        <label>Money <input type="number" id="bk-count-money" min="0" max="100" value="1"></label>
+        <label>Fractions <input type="number" id="bk-count-fractions" min="0" max="100" value="1"></label>
+        <label>Word Problems <input type="number" id="bk-count-word" min="0" max="100" value="1"></label>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="bk-build">Generate Book</button>
+        <button class="btn btn-gold" id="bk-print" disabled>⬇ Download / Print PDF</button>
+      </div>
+      <p class="hint" id="bk-status">The book gets a title page, one worksheet per page, and an Answer Key section at the back.
+      In the print dialog choose <strong>Save as PDF</strong> and set margins to <strong>None</strong> — the page size is set automatically.</p>
+    </div>
+    <div class="stage card stage-book">
+      <div id="bk-output" class="output"><p class="placeholder">Set your counts and click Generate Book. The full book preview appears here.</p></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">Songlap Deals</footer>
+</div><!-- /#app -->
+
+<!-- Book pages render here for screen preview AND print -->
+<div id="book-preview" hidden></div>
+
+<script src="generators.js"></script>
+<script src="render.js"></script>
+<script src="png.js"></script>
+<script src="app.js"></script>
+<script src="book.js"></script>
+</body>
+</html>
