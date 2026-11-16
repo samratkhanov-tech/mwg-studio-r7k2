@@ -443,43 +443,111 @@
     'balloons', 'cupcakes', 'buttons', 'coins', 'rocks', 'cards', 'beads',
     'plums', 'peaches'];
 
+  /* The story sentence for a word problem — shared by the classic maker
+   * and the per-grade maker so both read identically. */
+  function wordStory(op, name, obj, a, b) {
+    if (op === '+') {
+      return name + ' has ' + a + ' ' + obj + '. ' + name + ' finds ' + b +
+        ' more ' + obj + '. How many ' + obj + ' does ' + name + ' have in all?';
+    }
+    if (op === '−') {
+      return name + ' had ' + a + ' ' + obj + '. ' + name + ' gave ' + b +
+        ' ' + obj + ' to a friend. How many ' + obj + ' does ' + name + ' have left?';
+    }
+    if (op === '×') {
+      return name + ' has ' + a + ' boxes. Each box has ' + b + ' ' + obj +
+        '. How many ' + obj + ' does ' + name + ' have in all?';
+    }
+    return name + ' shares ' + a + ' ' + obj + ' equally among ' + b +
+      ' friends. How many ' + obj + ' does each friend get?';
+  }
+
   function makeWordProblem(op, rng) {
     var name = pick(rng, WP_NAMES);
     var obj = pick(rng, WP_OBJECTS);
-    var a, b, answer, text;
+    var a, b, answer;
     if (op === '+') {
       a = randRange(rng, 12, 95); b = randRange(rng, 11, 88);
       answer = a + b;
-      text = name + ' has ' + a + ' ' + obj + '. ' + name + ' finds ' + b +
-        ' more ' + obj + '. How many ' + obj + ' does ' + name + ' have in all?';
     } else if (op === '−') {
       a = randRange(rng, 25, 98); b = randRange(rng, 11, a - 5);
       answer = a - b;
-      text = name + ' had ' + a + ' ' + obj + '. ' + name + ' gave ' + b +
-        ' ' + obj + ' to a friend. How many ' + obj + ' does ' + name + ' have left?';
     } else if (op === '×') {
       a = randRange(rng, 2, 9); b = randRange(rng, 2, 12);
       answer = a * b;
-      text = name + ' has ' + a + ' boxes. Each box has ' + b + ' ' + obj +
-        '. How many ' + obj + ' does ' + name + ' have in all?';
     } else { // '÷'
       b = randRange(rng, 2, 9);
       var q = randRange(rng, 2, 12);
       a = b * q; answer = q;
-      text = name + ' shares ' + a + ' ' + obj + ' equally among ' + b +
-        ' friends. How many ' + obj + ' does each friend get?';
     }
     return {
-      kind: 'word', text: text, a: a, op: op, b: b, answer: answer,
+      kind: 'word', text: wordStory(op, name, obj, a, b), a: a, op: op, b: b, answer: answer,
       unit: obj, answerText: answer + ' ' + obj
     };
   }
 
-  function generateWordProblems(count, rng) {
+  /* ---------------- Word problems by grade ----------------
+   * Optional grade ('1'..'5') for generateWordProblems:
+   *   Grade 1: + and − only, every number ≤ 20
+   *   Grade 2: + and −, numbers ≤ 100
+   *   Grade 3: +, − and × (× stays inside the times tables), numbers ≤ 200
+   *   Grade 4: all four operations, numbers ≤ 1,000
+   *   Grade 5: all four operations at the tool's largest ranges
+   *            (3-digit +/− like the 3digit levels, tables to 12 and
+   *            2-digit × 1-digit like the widest multiplication ranges)
+   * No grade (or 'custom') keeps the original mixed behaviour exactly.
+   */
+  var WP_GRADE_OPS = {
+    '1': ['+', '−'],
+    '2': ['+', '−'],
+    '3': ['+', '−', '×'],
+    '4': ['+', '−', '×', '÷'],
+    '5': ['+', '−', '×', '÷']
+  };
+
+  function makeWordProblemForGrade(op, rng, grade) {
+    var name = pick(rng, WP_NAMES);
+    var obj = pick(rng, WP_OBJECTS);
+    var a, b, answer;
+    if (op === '+') {
+      if (grade === '1') { a = randRange(rng, 2, 18); b = randRange(rng, 2, 20 - a); }
+      else if (grade === '2') { a = randRange(rng, 15, 90); b = randRange(rng, 10, 100 - a); }
+      else if (grade === '3') { a = randRange(rng, 35, 160); b = randRange(rng, 15, 200 - a); }
+      else if (grade === '4') { a = randRange(rng, 120, 750); b = randRange(rng, 60, 1000 - a); }
+      else { a = randRange(rng, 100, 999); b = randRange(rng, 100, 999); } // '5'
+      answer = a + b;
+    } else if (op === '−') {
+      if (grade === '1') { a = randRange(rng, 5, 20); b = randRange(rng, 2, a - 1); }
+      else if (grade === '2') { a = randRange(rng, 30, 100); b = randRange(rng, 11, a - 5); }
+      else if (grade === '3') { a = randRange(rng, 60, 200); b = randRange(rng, 21, a - 10); }
+      else if (grade === '4') { a = randRange(rng, 250, 1000); b = randRange(rng, 80, a - 25); }
+      else { a = randRange(rng, 150, 999); b = randRange(rng, 100, a - 10); } // '5'
+      answer = a - b;
+    } else if (op === '×') {
+      if (grade === '4' && rng() < 0.5) { a = randRange(rng, 12, 49); b = randRange(rng, 2, 9); }
+      else if (grade === '5' && rng() < 0.5) { a = randRange(rng, 12, 99); b = randRange(rng, 2, 9); }
+      else if (grade === '5') { a = randRange(rng, 2, 12); b = randRange(rng, 2, 12); }
+      else { a = randRange(rng, 2, 9); b = randRange(rng, 2, 12); } // grades 3, and 4's table half
+      answer = a * b;
+    } else { // '÷' — always exact, as in the classic maker
+      var q;
+      if (grade === '4') { b = randRange(rng, 2, 12); q = randRange(rng, 3, 25); }
+      else { b = randRange(rng, 2, 12); q = randRange(rng, 2, 12); } // '5'
+      a = b * q; answer = q;
+    }
+    return {
+      kind: 'word', text: wordStory(op, name, obj, a, b), a: a, op: op, b: b, answer: answer,
+      unit: obj, answerText: answer + ' ' + obj
+    };
+  }
+
+  function generateWordProblems(count, rng, grade) {
     rng = rng || Math.random;
+    var g = WP_GRADE_OPS[grade] ? String(grade) : null;
+    var pool = g ? WP_GRADE_OPS[g] : MIXED_OPS;
     var ops = [];
     while (ops.length < count) {
-      var round = shuffle(MIXED_OPS.slice(), rng);
+      var round = shuffle(pool.slice(), rng);
       for (var i = 0; i < round.length && ops.length < count; i++) ops.push(round[i]);
     }
     var seen = {}, problems = [];
@@ -487,15 +555,16 @@
       var p = null, tries = 0;
       while (tries < 60) {
         tries++;
-        var cand = makeWordProblem(op, rng);
+        var cand = g ? makeWordProblemForGrade(op, rng, g) : makeWordProblem(op, rng);
         if (!seen[cand.text]) { seen[cand.text] = true; p = cand; break; }
       }
-      problems.push(p || makeWordProblem(op, rng));
+      problems.push(p || (g ? makeWordProblemForGrade(op, rng, g) : makeWordProblem(op, rng)));
     });
     return {
       type: 'word', title: 'Word Problems',
       instructions: 'Read each problem. Show your work in the space below, then write the answer.',
-      problems: problems
+      problems: problems,
+      grade: g
     };
   }
 
@@ -558,6 +627,7 @@
     generateMoney: generateMoney,
     generateFractions: generateFractions,
     generateWordProblems: generateWordProblems,
+    wordGradeOps: WP_GRADE_OPS,
     answerKey: answerKey,
     assembleBook: assembleBook,
     BOOK_TYPE_ORDER: BOOK_TYPE_ORDER,
