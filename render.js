@@ -13,6 +13,12 @@
       .replace(/"/g, '&quot;');
   }
 
+  /* Problem numbers normally start at 1. When the Book Builder splits a
+   * long worksheet across several printed pages it passes
+   * opts.startIndex (the number of problems already printed) so the
+   * numbering continues seamlessly from page to page. */
+  function startAt(opts) { return (opts && opts.startIndex) || 0; }
+
   /* ---------- Worksheet shell: Name / Date / Score header ---------- */
 
   function worksheetHeaderHTML(ws) {
@@ -44,7 +50,7 @@
 
   function arithBodyHTML(ws, opts) {
     var h = '<div class="prob-grid">';
-    ws.problems.forEach(function (p, i) { h += arithProblemHTML(p, i, opts); });
+    ws.problems.forEach(function (p, i) { h += arithProblemHTML(p, startAt(opts) + i, opts); });
     return h + '</div>';
   }
 
@@ -84,7 +90,7 @@
     opts = opts || {};
     var h = '<div class="prob-list">';
     ws.problems.forEach(function (p, i) {
-      h += '<div class="money-prob"><span class="prob-num">' + (i + 1) + ')</span>';
+      h += '<div class="money-prob"><span class="prob-num">' + (startAt(opts) + i + 1) + ')</span>';
       if (p.kind === 'money-count') {
         h += '<div class="money-visual">' + moneySVG(p.items) + '</div>' +
           '<div class="money-prompt">' + esc(p.prompt) +
@@ -137,7 +143,7 @@
     opts = opts || {};
     var h = '<div class="frac-grid">';
     ws.problems.forEach(function (p, i) {
-      h += '<div class="frac-prob"><span class="prob-num">' + (i + 1) + ')</span>';
+      h += '<div class="frac-prob"><span class="prob-num">' + (startAt(opts) + i + 1) + ')</span>';
       if (p.kind === 'frac-identify') {
         h += fractionSVG(p) +
           '<div class="frac-blank">' + fracHTML('&nbsp;', '&nbsp;') + '</div>' +
@@ -162,7 +168,7 @@
     opts = opts || {};
     var h = '<div class="prob-list">';
     ws.problems.forEach(function (p, i) {
-      h += '<div class="word-prob"><p><span class="prob-num">' + (i + 1) + ')</span> ' +
+      h += '<div class="word-prob"><p><span class="prob-num">' + (startAt(opts) + i + 1) + ')</span> ' +
         esc(p.text) + '</p>' +
         '<div class="workspace-lines"><div></div><div></div></div>' +
         '<p class="word-answer">Answer: <span class="answer-line">' +
@@ -188,9 +194,11 @@
       worksheetBodyHTML(ws, opts) + '</div>';
   }
 
-  function answerKeyHTML(ws) {
+  function answerKeyHTML(ws, opts) {
     var key = MW.answerKey(ws);
-    var h = '<div class="akey"><h3>Answer Key — ' + esc(ws.title) + '</h3><ol class="akey-list">';
+    var start = startAt(opts);
+    var h = '<div class="akey"><h3>Answer Key — ' + esc(ws.title) + '</h3>' +
+      '<ol class="akey-list"' + (start ? ' start="' + (start + 1) + '"' : '') + '>';
     key.forEach(function (a) { h += '<li>' + esc(a) + '</li>'; });
     return h + '</ol></div>';
   }

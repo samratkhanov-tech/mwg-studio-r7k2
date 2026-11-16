@@ -103,12 +103,15 @@
         p.items.forEach(function (it) {
           for (var k = 0; k < it.count; k++) {
             if (it.kind === 'bill') {
+              // wrap to a fresh row before the item would leave the canvas
+              if (x > MARGIN + 10 && x + 300 > WIDTH - MARGIN) { x = MARGIN + 10; y += 196; }
               plan.ops.push({ t: 'rect', x: x, y: y, w: 300, h: 128, color: BILL_FILL });
               plan.ops.push({ t: 'frame', x: x, y: y, w: 300, h: 128, lw: 4, color: BILL_EDGE });
               text(plan, x + 150, y + 64, it.label, 62, { weight: 700, color: '#1e5631' });
               x += 322;
             } else {
               var r = PNG_COIN_R[it.denom] || 66;
+              if (x > MARGIN + 10 && x + r * 2 > WIDTH - MARGIN) { x = MARGIN + 10; y += 196; }
               plan.ops.push({ t: 'circle', x: x + r, y: y + 84, r: r, color: '#e8edf0' });
               plan.ops.push({ t: 'ring', x: x + r, y: y + 84, r: r, lw: 4, color: COIN_EDGE });
               text(plan, x + r, y + 84, it.label, 50, { weight: 700, color: '#5c4a12' });

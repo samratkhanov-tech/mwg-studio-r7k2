@@ -1,9 +1,21 @@
 /*
  * Songlap Math Worksheet Generator — Book Builder + single-sheet printing.
- * Assembles a print-ready book (title page, one worksheet per page, and an
+ * Assembles a print-ready book (title page, worksheet pages, and an
  * Answer Key section at the back) into #book-preview, which is what the
  * browser prints. @page size is set to the chosen page size.
  * The same preview area is used to print a single worksheet + its key.
+ *
+ * PAGINATION: a worksheet does NOT always fit on one sheet — 25 word
+ * problems or money problems are several sheets tall. Fixed-height
+ * pages with overflow:hidden used to clip the excess silently, so
+ * buyers lost problems in print. Instead, every worksheet and answer
+ * key is now MEASURED in a hidden replica page (same width, padding,
+ * label and footer as the real page) and split into as many sheets as
+ * it needs, with problem numbering continuing across the split
+ * (Render's startIndex). A chunk never splits a problem grid row or
+ * list item awkwardly — chunks are whole problem prefixes, and the
+ * measurement is done with the real browser layout, so the fit is
+ * exact for the buyer's own fonts. No chunk is ever empty.
  */
 (function () {
   'use strict';
@@ -29,21 +41,135 @@
       ';padding:' + size.pad + size.unit + ';';
   }
 
+  /* ---------- Page assembly ---------- */
+
+  /* One printed page: optional label, body, footer. Used for BOTH the
+   * measuring replica and the real output so they can never drift. */
+  function pageHTML(size, labelText, bodyHTML, footerText) {
+    return '<div class="book-page" style="' + pageStyle(size) + '">' +
+      (labelText ? '<p class="worksheet-label">' + Render.esc(labelText) + '</p>' : '') +
+      '<div class="page-body">' + bodyHTML + '</div>' +
+      '<p class="page-footer">' + Render.esc(footerText) + '</p></div>';
+  }
+
+  function coverPageHTML(size, innerHTML) {
+    return '<div class="book-page cover-page" style="' + pageStyle(size) + '">' +
+      '<div class="cover-inner">' + innerHTML + '</div></div>';
+  }
+
+  function dividerPageHTML(size, innerHTML) {
+    return '<div class="book-page divider-page" style="' + pageStyle(size) + '">' +
+      '<div class="cover-inner">' + innerHTML + '</div></div>';
+  }
+
+  /* ---------- Measuring ---------- */
+
+  var measureEl = null;
+
+  /* Lay the candidate page out in a hidden replica and report whether
+   * everything sits inside the sheet: the footer must end within the
+   * page box and the content must not reach into the footer. */
+  function contentFits(size, labelText, bodyHTML, footerText) {
+    if (!measureEl) {
+      measureEl = document.createElement('div');
+      measureEl.setAttribute('aria-hidden', 'true');
+      measureEl.style.cssText = 'position:absolute;left:-100000px;top:0;visibility:hidden;';
+      document.body.appendChild(measureEl);
+    }
+    measureEl.innerHTML = pageHTML(size, labelText, bodyHTML, footerText);
+    var page = measureEl.firstChild;
+    var body = page.querySelector('.page-body');
+    var content = body ? body.firstElementChild : null;
+    var footerEl = page.querySelector('.page-footer');
+    if (!content || !footerEl) return true;
+    var footerBottom = footerEl.offsetTop + footerEl.offsetHeight;
+    var contentBottom = content.offsetTop + content.offsetHeight;
+    return footerBottom <= page.clientHeight + 1 &&
+      contentBottom <= footerEl.offsetTop + 1;
+  }
+
+  /* ---------- Pagination (pure chunking; unit-tested in Node) ---------- */
+
+  /* Split `total` items into consecutive chunks. buildBody(start, count)
+   * returns the page-body HTML for that slice; fits(html) reports
+   * whether a slice fits on one sheet. Fitting is monotone (a shorter
+   * slice never needs more room), so binary search finds the largest
+   * fitting slice. Every item is covered exactly once, in order; a
+   * single item that cannot fit alone still gets its own page — items
+   * are never dropped and no page is ever empty. */
+  function paginateByFit(total, buildBody, fits) {
+    var chunks = [];
+    var start = 0;
+    while (start < total) {
+      var remaining = total - start;
+      var best = 1;
+      var lo = 1, hi = remaining;
+      while (lo <= hi) {
+        var mid = (lo + hi) >> 1;
+        if (fits(buildBody(start, mid))) { best = mid; lo = mid + 1; }
+        else { hi = mid - 1; }
+      }
+      chunks.push({ start: start, count: best });
+      start += best;
+    }
+    return chunks;
+  }
+
+  /* A worksheet copy holding only problems[start, start+count). */
+  function subsetWS(ws, start, count) {
+    var copy = {};
+    for (var k in ws) copy[k] = ws[k];
+    copy.problems = ws.problems.slice(start, start + count);
+    return copy;
+  }
+
+  function bodyBuilder(ws, renderSlice) {
+    var b = function (start, count) {
+      return renderSlice(subsetWS(ws, start, count), start);
+    };
+    b.total = ws.problems.length;
+    return b;
+  }
+
+  function worksheetBody(ws) {
+    return bodyBuilder(ws, function (sub, start) {
+      return Render.worksheetHTML(sub, { startIndex: start });
+    });
+  }
+
+  function answerKeyBody(ws) {
+    return bodyBuilder(ws, function (sub, start) {
+      return Render.answerKeyHTML(sub, { startIndex: start });
+    });
+  }
+
+  /* Build the printed pages for one body (a worksheet or an answer
+   * key): as many sheets as the content needs. The first sheet carries
+   * labelBase, later sheets labelBase + " (continued)"; labelBase may
+   * be null for unlabelled pages. Fit is measured against the
+   * continuation label (the longer one) so every sheet fits. */
+  function paginatedPages(size, labelBase, footerText, buildBody) {
+    var measureLabel = labelBase ? labelBase + ' (continued)' : null;
+    var chunks = paginateByFit(buildBody.total, buildBody, function (html) {
+      return contentFits(size, measureLabel, html, footerText);
+    });
+    return chunks.map(function (ch, ci) {
+      var label = labelBase
+        ? (ci === 0 ? labelBase : labelBase + ' (continued)')
+        : null;
+      return pageHTML(size, label, buildBody(ch.start, ch.count), footerText);
+    });
+  }
+
   /* ---------- Single worksheet printing ---------- */
 
   function printWorksheet(ws) {
     var size = SIZES.letter;
     setPageSize(size);
-    var ps = pageStyle(size);
+    var foot = 'Math Worksheet Generator · Songlap Deals';
     var pages = [];
-    pages.push(
-      '<div class="book-page" style="' + ps + '">' +
-        '<div class="page-body">' + Render.worksheetHTML(ws) + '</div>' +
-        '<p class="page-footer">Math Worksheet Generator · Songlap Deals</p></div>');
-    pages.push(
-      '<div class="book-page" style="' + ps + '">' +
-        '<div class="page-body">' + Render.answerKeyHTML(ws) + '</div>' +
-        '<p class="page-footer">Math Worksheet Generator · Songlap Deals</p></div>');
+    pages = pages.concat(paginatedPages(size, null, foot, worksheetBody(ws)));
+    pages = pages.concat(paginatedPages(size, 'Answer Key — ' + ws.title, foot, answerKeyBody(ws)));
     var preview = $('book-preview');
     preview.innerHTML = pages.join('');
     preview.hidden = false;
@@ -107,50 +233,33 @@
 
   function renderBook(title, author, size, sets) {
     setPageSize(size);
-    var ps = pageStyle(size);
     var pages = [];
 
     // title page
-    pages.push(
-      '<div class="book-page cover-page" style="' + ps + '">' +
-        '<div class="cover-inner">' +
-          '<div class="cover-puzzle-icon">🧮</div>' +
-          '<h1 class="cover-title">' + Render.esc(title) + '</h1>' +
-          (author ? '<p class="cover-author">by ' + Render.esc(author) + '</p>' : '') +
-          '<p class="cover-count">' + sets.length + ' worksheets with answer keys</p>' +
-          '<p class="cover-brand">SONGLAP DEALS</p>' +
-        '</div>' +
-      '</div>');
+    pages.push(coverPageHTML(size,
+      '<div class="cover-puzzle-icon">🧮</div>' +
+      '<h1 class="cover-title">' + Render.esc(title) + '</h1>' +
+      (author ? '<p class="cover-author">by ' + Render.esc(author) + '</p>' : '') +
+      '<p class="cover-count">' + sets.length + ' worksheets with answer keys</p>' +
+      '<p class="cover-brand">SONGLAP DEALS</p>'));
 
-    function footer(text) {
-      return '<p class="page-footer">' + Render.esc(text) + '</p>';
-    }
-
-    // worksheet pages
+    // worksheet pages (each worksheet takes as many sheets as it needs)
     sets.forEach(function (ws, idx) {
-      pages.push(
-        '<div class="book-page" style="' + ps + '">' +
-          '<p class="worksheet-label">Worksheet ' + (idx + 1) + ' — ' + Render.esc(ws.title) + '</p>' +
-          '<div class="page-body">' + Render.worksheetHTML(ws) + '</div>' +
-          footer(title + ' · Worksheet ' + (idx + 1)) +
-        '</div>');
+      var label = 'Worksheet ' + (idx + 1) + ' — ' + ws.title;
+      var foot = title + ' · Worksheet ' + (idx + 1);
+      pages = pages.concat(paginatedPages(size, label, foot, worksheetBody(ws)));
     });
 
     // answer-key divider
-    pages.push(
-      '<div class="book-page divider-page" style="' + ps + '">' +
-        '<div class="cover-inner"><h1 class="cover-title">Answer Key</h1>' +
-        '<p class="cover-count">Answers for all ' + sets.length + ' worksheets</p></div>' +
-      '</div>');
+    pages.push(dividerPageHTML(size,
+      '<h1 class="cover-title">Answer Key</h1>' +
+      '<p class="cover-count">Answers for all ' + sets.length + ' worksheets</p>'));
 
     // answer-key pages
     sets.forEach(function (ws, idx) {
-      pages.push(
-        '<div class="book-page" style="' + ps + '">' +
-          '<p class="worksheet-label">Answer Key — Worksheet ' + (idx + 1) + ' (' + Render.esc(ws.title) + ')</p>' +
-          '<div class="page-body">' + Render.answerKeyHTML(ws) + '</div>' +
-          footer(title + ' · Answer Key ' + (idx + 1)) +
-        '</div>');
+      var label = 'Answer Key — Worksheet ' + (idx + 1) + ' (' + ws.title + ')';
+      var foot = title + ' · Answer Key ' + (idx + 1);
+      pages = pages.concat(paginatedPages(size, label, foot, answerKeyBody(ws)));
     });
 
     var preview = $('book-preview');
@@ -159,5 +268,10 @@
     return pages.length;
   }
 
-  window.BookBuilder = { init: init, printWorksheet: printWorksheet, _renderBook: renderBook };
+  var api = {
+    init: init, printWorksheet: printWorksheet, _renderBook: renderBook,
+    _paginateByFit: paginateByFit, _SIZES: SIZES
+  };
+  if (typeof window !== 'undefined') window.BookBuilder = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })();
