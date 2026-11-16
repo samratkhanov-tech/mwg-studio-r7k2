@@ -38,13 +38,77 @@ function interpretLicenseResponse(data) {
   return { action: 'error', message: licenseErrorMessage(data.error) };
 }
 
+/* ---------- Grade quick-set (pure data, unit-tested) ----------
+ * Every worksheet tab (and the Book Builder) has a "Grade (quick set)"
+ * dropdown. Choosing Grade 1–5 presets the tab's EXISTING controls to
+ * the values below; choosing "Custom" leaves the controls untouched.
+ * If the buyer then changes a mapped control by hand, that tab's Grade
+ * dropdown falls back to "Custom" (wired in initGrades below).
+ * Word Problems has no difficulty control to preset — its grade is a
+ * generator parameter instead (see MW.wordGradeOps in generators.js),
+ * held as tab state in the app and passed to MW.generateWordProblems.
+ */
+var TAB_GRADE_MAP = {
+  addition: {
+    gradeId: 'addition-grade', controlId: 'addition-level',
+    values: { '1': '1digit', '2': '2digit-noreg', '3': '2digit-reg', '4': '3digit', '5': '3digit' }
+  },
+  subtraction: {
+    gradeId: 'subtraction-grade', controlId: 'subtraction-level',
+    values: { '1': '1digit', '2': '2digit-noreg', '3': '2digit-reg', '4': '3digit', '5': '3digit' }
+  },
+  multiplication: {
+    gradeId: 'multiplication-grade', controlId: 'multiplication-range',
+    values: { '1': '2-5', '2': '2-5', '3': '2-9', '4': '2-12', '5': '2x1' }
+  },
+  division: {
+    gradeId: 'division-grade', controlId: 'division-range',
+    values: { '1': '2-5', '2': '2-5', '3': '2-9', '4': '2-12', '5': '2-12' },
+    checkboxId: 'division-remainders',
+    remainders: { '1': false, '2': false, '3': false, '4': false, '5': true }
+  },
+  mixed: {
+    gradeId: 'mixed-grade', controlId: 'mixed-level',
+    values: { '1': 'easy', '2': 'easy', '3': 'medium', '4': 'medium', '5': 'hard' }
+  },
+  money: {
+    gradeId: 'money-grade', controlId: 'money-mode',
+    values: { '1': 'count', '2': 'count', '3': 'mixed', '4': 'mixed', '5': 'mixed' }
+  },
+  fractions: {
+    gradeId: 'fractions-grade', controlId: 'fractions-mode',
+    values: { '1': 'identify', '2': 'identify', '3': 'equiv', '4': 'add', '5': 'mixed' }
+  },
+  book: {
+    gradeId: 'bk-grade', controlId: 'bk-difficulty',
+    values: { '1': 'easy', '2': 'easy', '3': 'medium', '4': 'hard', '5': 'hard' }
+  }
+};
+
+/* The preset for one tab + grade: { controlId, value } plus, for the
+ * division tab, { checkboxId, checked }. Null for "Custom"/unknown. */
+function gradePreset(tabKey, grade) {
+  var spec = TAB_GRADE_MAP[tabKey];
+  if (!spec) return null;
+  var value = spec.values[grade];
+  if (value === undefined) return null;
+  var preset = { controlId: spec.controlId, value: value };
+  if (spec.checkboxId) {
+    preset.checkboxId = spec.checkboxId;
+    preset.checked = !!spec.remainders[grade];
+  }
+  return preset;
+}
+
 /* Allow the Node test suite to exercise the pure logic above. */
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     LICENSE_API_URL: LICENSE_API_URL,
     LICENSE_ERROR_MESSAGES: LICENSE_ERROR_MESSAGES,
     licenseErrorMessage: licenseErrorMessage,
-    interpretLicenseResponse: interpretLicenseResponse
+    interpretLicenseResponse: interpretLicenseResponse,
+    TAB_GRADE_MAP: TAB_GRADE_MAP,
+    gradePreset: gradePreset
   };
 }
 
@@ -142,6 +206,7 @@ if (typeof module !== 'undefined' && module.exports) {
   function countOf(id) { return parseInt($(id).value, 10) || 20; }
 
   var state = {}; // key -> { ws, showKey }
+  var wordGrade = null; // Word Problems tab state: '1'..'5', or null = Custom
 
   function initApp() {
     initTabs();
@@ -168,8 +233,9 @@ if (typeof module !== 'undefined' && module.exports) {
       return MW.generateFractions(countOf('fractions-count'), $('fractions-mode').value, rng);
     });
     wireTab('word', function (rng) {
-      return MW.generateWordProblems(countOf('word-count'), rng);
+      return MW.generateWordProblems(countOf('word-count'), rng, wordGrade);
     });
+    initGrades();
     if (window.BookBuilder) BookBuilder.init(seedRng);
     // friendly first screen: pre-generate an addition worksheet
     $('addition-generate').click();
@@ -184,6 +250,42 @@ if (typeof module !== 'undefined' && module.exports) {
       document.querySelectorAll('.panel').forEach(function (p) { p.hidden = true; });
       $('panel-' + btn.dataset.tab).hidden = false;
     });
+  }
+
+  /* Grade quick-set wiring. Picking a grade presets the tab's mapped
+   * control(s) (programmatic value sets do not fire 'change', so this
+   * never loops); touching a mapped control by hand afterwards sends
+   * that tab's Grade dropdown back to "Custom". The Word Problems tab
+   * has no mapped control — its grade lives in `wordGrade` above and
+   * is handed to the generator on every Generate click. */
+  function initGrades() {
+    Object.keys(TAB_GRADE_MAP).forEach(function (key) {
+      var spec = TAB_GRADE_MAP[key];
+      var gradeSel = $(spec.gradeId);
+      if (!gradeSel) return;
+      gradeSel.addEventListener('change', function () {
+        var preset = gradePreset(key, gradeSel.value);
+        if (!preset) return; // "Custom": leave the controls as they are
+        var control = $(preset.controlId);
+        if (control) control.value = preset.value;
+        if (preset.checkboxId) {
+          var box = $(preset.checkboxId);
+          if (box) box.checked = preset.checked;
+        }
+      });
+      var mapped = [spec.controlId, spec.checkboxId];
+      mapped.forEach(function (controlId) {
+        if (!controlId) return;
+        var el = $(controlId);
+        if (el) el.addEventListener('change', function () { gradeSel.value = 'custom'; });
+      });
+    });
+    var wordSel = $('word-grade');
+    if (wordSel) {
+      wordSel.addEventListener('change', function () {
+        wordGrade = wordSel.value === 'custom' ? null : wordSel.value;
+      });
+    }
   }
 
   /* One worksheet tab: Generate / answer-key toggle / Print-PDF / PNG. */
