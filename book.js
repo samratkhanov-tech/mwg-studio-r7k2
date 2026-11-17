@@ -52,9 +52,24 @@
       '<p class="page-footer">' + Render.esc(footerText) + '</p></div>';
   }
 
-  function coverPageHTML(size, innerHTML) {
-    return '<div class="book-page cover-page" style="' + pageStyle(size) + '">' +
+  function coverPageHTML(size, innerHTML, extraClass) {
+    return '<div class="book-page cover-page' + (extraClass ? ' ' + extraClass : '') +
+      '" style="' + pageStyle(size) + '">' +
       '<div class="cover-inner">' + innerHTML + '</div></div>';
+  }
+
+  /* The designed cover bleeds to the very edge of the sheet (no
+   * page padding), like a real workbook cover. */
+  function bleedCoverPageHTML(size, innerHTML) {
+    var style = 'width:' + size.w + size.unit + ';height:' + size.h + size.unit + ';padding:0;';
+    return '<div class="book-page cover-page book-cover-page" style="' + style + '">' +
+      '<div class="cover-inner">' + innerHTML + '</div></div>';
+  }
+
+  function getCoverMaker() {
+    if (typeof window !== 'undefined' && window.CoverMaker) return window.CoverMaker;
+    if (typeof globalThis !== 'undefined' && globalThis.CoverMaker) return globalThis.CoverMaker;
+    return null;
   }
 
   function dividerPageHTML(size, innerHTML) {
@@ -66,9 +81,19 @@
 
   var measureEl = null;
 
+  /* Reserved clearance (px) between the bottom of the content and the
+   * top of the footer. A problem whose writing area would end inside
+   * this band — or anywhere in the footer below it — does not fit and
+   * moves to the next page. The band absorbs the small layout
+   * differences between the measuring engine and real print engines,
+   * which otherwise let the last problem on a full page print on top
+   * of the footer. */
+  var FOOTER_CLEARANCE = 24;
+
   /* Lay the candidate page out in a hidden replica and report whether
    * everything sits inside the sheet: the footer must end within the
-   * page box and the content must not reach into the footer. */
+   * page box and the content must end at least FOOTER_CLEARANCE px
+   * above the footer. */
   function contentFits(size, labelText, bodyHTML, footerText) {
     if (!measureEl) {
       measureEl = document.createElement('div');
@@ -85,7 +110,7 @@
     var footerBottom = footerEl.offsetTop + footerEl.offsetHeight;
     var contentBottom = content.offsetTop + content.offsetHeight;
     return footerBottom <= page.clientHeight + 1 &&
-      contentBottom <= footerEl.offsetTop + 1;
+      contentBottom <= footerEl.offsetTop - FOOTER_CLEARANCE;
   }
 
   /* ---------- Pagination (pure chunking; unit-tested in Node) ---------- */
@@ -179,7 +204,13 @@
 
   /* ---------- Book Builder ---------- */
 
-  function init(seedRng) {
+  /* coverProvider (optional) returns the buyer's Cover Maker
+   * settings (see cover.js); when it yields a titled cover, the
+   * designed cover becomes page 1 of the book. */
+  var coverProvider = null;
+
+  function init(seedRng, provider) {
+    coverProvider = provider || null;
     $('bk-build').addEventListener('click', function () { buildBook(seedRng); });
     $('bk-print').addEventListener('click', function () { window.print(); });
   }
@@ -191,8 +222,14 @@
   }
 
   function buildBook(seedRng) {
-    var title = $('bk-title').value.trim() || 'My Math Worksheets';
-    var author = $('bk-author').value.trim();
+    var cover = null;
+    var CM = getCoverMaker();
+    if (coverProvider && CM) {
+      var raw = coverProvider();
+      if (raw) cover = CM.normalizeCoverSettings(raw);
+    }
+    var title = (cover && cover.title) || $('bk-title').value.trim() || 'My Math Worksheets';
+    var author = (cover && cover.author) || $('bk-author').value.trim();
     var size = SIZES[$('bk-size').value] || SIZES.letter;
     var counts = {};
     var totalSets = 0;
@@ -216,10 +253,10 @@
           perWorksheet: parseInt($('bk-per').value, 10) || 20,
           divisionRemainders: $('bk-remainders').checked
         }, rng);
-        var pageCount = renderBook(title, author, size, sets);
+        var pageCount = renderBook(title, author, size, sets, cover);
         $('bk-print').disabled = false;
         $('bk-status').textContent = 'Book ready: ' + sets.length + ' worksheets, ' +
-          pageCount + ' pages total (title + worksheet pages + answer-key section). ' +
+          pageCount + ' pages total (cover + worksheet pages + answer-key section). ' +
           'Scroll down to preview, then click Download / Print PDF.';
         $('bk-output').innerHTML = '<p class="placeholder">✅ Book generated — preview is below the tool. ' +
           'Click <strong>Download / Print PDF</strong> to save it at ' + size.label + '.</p>';
@@ -231,17 +268,24 @@
     }, 30);
   }
 
-  function renderBook(title, author, size, sets) {
+  function renderBook(title, author, size, sets, cover) {
     setPageSize(size);
     var pages = [];
 
-    // title page
-    pages.push(coverPageHTML(size,
-      '<div class="cover-puzzle-icon">🧮</div>' +
-      '<h1 class="cover-title">' + Render.esc(title) + '</h1>' +
-      (author ? '<p class="cover-author">by ' + Render.esc(author) + '</p>' : '') +
-      '<p class="cover-count">' + sets.length + ' worksheets with answer keys</p>' +
-      '<p class="cover-brand">SONGLAP DEALS</p>'));
+    // page 1: the buyer's designed cover (Cover Maker), or the
+    // plain title page when no cover settings are supplied
+    var CM = getCoverMaker();
+    if (cover && CM) {
+      pages.push(bleedCoverPageHTML(size,
+        CM.coverHTML(cover, { count: sets.length })));
+    } else {
+      pages.push(coverPageHTML(size,
+        '<div class="cover-puzzle-icon">🧮</div>' +
+        '<h1 class="cover-title">' + Render.esc(title) + '</h1>' +
+        (author ? '<p class="cover-author">by ' + Render.esc(author) + '</p>' : '') +
+        '<p class="cover-count">' + sets.length + ' worksheets with answer keys</p>' +
+        '<p class="cover-brand">SONGLAP DEALS</p>'));
+    }
 
     // worksheet pages (each worksheet takes as many sheets as it needs)
     sets.forEach(function (ws, idx) {
@@ -270,7 +314,7 @@
 
   var api = {
     init: init, printWorksheet: printWorksheet, _renderBook: renderBook,
-    _paginateByFit: paginateByFit, _SIZES: SIZES
+    _paginateByFit: paginateByFit, _SIZES: SIZES, _FOOTER_CLEARANCE: FOOTER_CLEARANCE
   };
   if (typeof window !== 'undefined') window.BookBuilder = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
