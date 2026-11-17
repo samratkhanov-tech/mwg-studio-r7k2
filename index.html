@@ -405,6 +405,53 @@
       <label>Author
         <input type="text" id="bk-author" value="">
       </label>
+
+      <fieldset class="cover-controls">
+        <legend>📗 Book Cover</legend>
+        <label>Cover title
+          <input type="text" id="cv-title" value="Math Worksheets" maxlength="60">
+        </label>
+        <label>Subtitle (optional)
+          <input type="text" id="cv-subtitle" value="Addition • Subtraction • Multiplication • Division — with Answer Keys" maxlength="90">
+        </label>
+        <label>Grade label
+          <input type="text" id="cv-grade" value="Grades 1–5" maxlength="24">
+        </label>
+        <label>Cover author / brand
+          <input type="text" id="cv-author" value="" maxlength="40" placeholder="Your name — shown as “by …”">
+        </label>
+        <label>Cover highlights (separate with •)
+          <input type="text" id="cv-features" value="Money Skills • Fractions Fun • Word Problems • Answer Keys Included" maxlength="120">
+        </label>
+        <span class="cv-theme-label">Cover design</span>
+        <div class="cv-themes" id="cv-themes">
+          <label class="cv-theme-option">
+            <input type="radio" name="cv-theme" value="sunshine" checked>
+            <span class="cv-swatches"><i style="background:#29a7e1"></i><i style="background:#ff5d8f"></i><i style="background:#ffd166"></i></span>
+            Sunshine Pop
+          </label>
+          <label class="cv-theme-option">
+            <input type="radio" name="cv-theme" value="rainbow">
+            <span class="cv-swatches"><i style="background:#e63946"></i><i style="background:#f4840b"></i><i style="background:#2a9d8f"></i></span>
+            Rainbow Classic
+          </label>
+          <label class="cv-theme-option">
+            <input type="radio" name="cv-theme" value="jumbo">
+            <span class="cv-swatches"><i style="background:#ff7847"></i><i style="background:#fff7e6"></i><i style="background:#2a7f62"></i></span>
+            Jumbo Carnival
+          </label>
+          <label class="cv-theme-option">
+            <input type="radio" name="cv-theme" value="teal">
+            <span class="cv-swatches"><i style="background:#0f2027"></i><i style="background:#ffd166"></i><i style="background:#e63946"></i></span>
+            Teal &amp; Gold
+          </label>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="cv-png" type="button">⬇ Cover PNG (300 DPI)</button>
+        </div>
+        <p class="hint">Your cover becomes <strong>page 1</strong> of the book — with your title and your name on it. The preview is on the right.</p>
+      </fieldset>
+
       <label>Page size
         <select id="bk-size">
           <option value="letter" selected>Letter (8.5 × 11 in)</option>
@@ -453,10 +500,12 @@
         <button class="btn btn-primary" id="bk-build">Generate Book</button>
         <button class="btn btn-gold" id="bk-print" disabled>⬇ Download / Print PDF</button>
       </div>
-      <p class="hint" id="bk-status">The book gets a title page, one worksheet per page, and an Answer Key section at the back.
+      <p class="hint" id="bk-status">The book gets your designed cover as page 1, one worksheet per page, and an Answer Key section at the back.
       In the print dialog choose <strong>Save as PDF</strong> and set margins to <strong>None</strong> — the page size is set automatically.</p>
     </div>
     <div class="stage card stage-book">
+      <h3 class="cv-preview-title">Cover preview</h3>
+      <div id="cv-preview" class="cv-preview"></div>
       <div id="bk-output" class="output"><p class="placeholder">Set your counts and click Generate Book. The full book preview appears here.</p></div>
     </div>
   </section>
@@ -472,6 +521,7 @@
 <script src="generators.js"></script>
 <script src="render.js"></script>
 <script src="png.js"></script>
+<script src="cover.js"></script>
 <script src="app.js"></script>
 <script src="book.js"></script>
 </body>
