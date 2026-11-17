@@ -217,6 +217,39 @@ body {
 .book-page .prob-grid { gap: 20px 26px; }
 .cover-page, .divider-page { align-items: center; justify-content: center; text-align: center; }
 .cover-inner { margin: auto; }
+
+/* ---------- Cover Maker (Book Builder) ---------- */
+.cover-controls {
+  border: 2px solid #ffd166; border-radius: 12px;
+  padding: 6px 14px 12px; margin: 0 0 16px; background: #fffdf4;
+}
+.cover-controls legend { font-weight: 800; color: #0f2027; font-size: 15px; padding: 0 6px; }
+.cv-theme-label { display: block; font-weight: 600; font-size: 14px; color: #33505c; margin-bottom: 8px; }
+.cv-themes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.cv-theme-option {
+  display: flex !important; align-items: center; gap: 8px; margin-bottom: 0 !important;
+  border: 1.5px solid #c8d6dc; border-radius: 9px; padding: 8px 9px;
+  background: #fff; cursor: pointer; font-size: 13px !important;
+}
+.cv-theme-option:has(input:checked) { border-color: #b98a1d; background: #fff7dd; }
+.cv-theme-option input { margin: 0; flex: none; }
+.cv-swatches { display: inline-flex; gap: 3px; flex: none; }
+.cv-swatches i { width: 13px; height: 13px; border-radius: 50%; border: 1px solid rgba(0,0,0,.18); display: block; }
+.cv-preview-title { margin: 0 0 10px; color: #0f2027; font-size: 16px; }
+.cv-preview {
+  max-width: 430px; margin: 0 auto 14px;
+  border: 1.5px solid #c8d6dc; border-radius: 10px; overflow: hidden;
+  box-shadow: 0 4px 16px rgba(15,32,39,.16); background: #fff;
+}
+.cv-wrap { width: 100%; height: 100%; }
+.cv-svg { display: block; width: 100%; height: 100%; }
+.cv-preview .cv-wrap { aspect-ratio: 730 / 980; height: auto; }
+
+/* designed cover fills the whole first page of the book */
+.book-cover-page .cover-inner { width: 100%; height: 100%; margin: 0; }
+.book-cover-page .cv-wrap {
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
 .cover-puzzle-icon { font-size: 64px; }
 .cover-title { font-size: 34px; margin: 10px 0 8px; color: #0f2027; line-height: 1.2; }
 .cover-author { font-size: 17px; color: #33505c; margin: 0 0 18px; }
