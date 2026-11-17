@@ -236,7 +236,12 @@ if (typeof module !== 'undefined' && module.exports) {
       return MW.generateWordProblems(countOf('word-count'), rng, wordGrade);
     });
     initGrades();
-    if (window.BookBuilder) BookBuilder.init(seedRng);
+    initCover();
+    if (window.BookBuilder) {
+      BookBuilder.init(seedRng, function () {
+        return window.CoverMaker ? currentCoverSettings() : null;
+      });
+    }
     // friendly first screen: pre-generate an addition worksheet
     $('addition-generate').click();
   }
@@ -286,6 +291,102 @@ if (typeof module !== 'undefined' && module.exports) {
         wordGrade = wordSel.value === 'custom' ? null : wordSel.value;
       });
     }
+  }
+
+  /* ---------- Cover Maker (Book Builder) ----------
+   * The buyer designs the book's cover (own title, subtitle, grade
+   * label, author/brand and highlight line) in one of the ready-made
+   * themes in cover.js. The preview updates live; the settings are
+   * persisted in localStorage; the designed cover becomes page 1 of
+   * the built book (book.js asks currentCoverSettings via the
+   * provider passed to BookBuilder.init) and can also be downloaded
+   * on its own as a ~300 DPI PNG. */
+
+  var COVER_KEY = 'mwg_cover_settings';
+
+  function currentCoverSettings() {
+    if (!window.CoverMaker) return null;
+    var checked = document.querySelector('input[name="cv-theme"]:checked');
+    return CoverMaker.normalizeCoverSettings({
+      title: $('cv-title').value,
+      subtitle: $('cv-subtitle').value,
+      grade: $('cv-grade').value,
+      author: $('cv-author').value,
+      features: $('cv-features').value,
+      theme: checked ? checked.value : undefined
+    });
+  }
+
+  function coverWorksheetCount() {
+    var total = 0;
+    MW.BOOK_TYPE_ORDER.forEach(function (type) {
+      var el = $('bk-count-' + type);
+      var n = el ? parseInt(el.value, 10) : 0;
+      if (!isNaN(n) && n > 0) total += Math.min(n, 100);
+    });
+    return total;
+  }
+
+  function refreshCoverPreview() {
+    if (!window.CoverMaker) return;
+    var settings = currentCoverSettings();
+    $('cv-preview').innerHTML =
+      CoverMaker.coverHTML(settings, { count: coverWorksheetCount() });
+    try { localStorage.setItem(COVER_KEY, JSON.stringify(settings)); } catch (e) { /* ignore */ }
+  }
+
+  function setCoverTheme(themeId) {
+    document.querySelectorAll('input[name="cv-theme"]').forEach(function (r) {
+      r.checked = r.value === themeId;
+    });
+  }
+
+  function initCover() {
+    if (!window.CoverMaker || !$('cv-title')) return;
+    var restored = false;
+    try {
+      var saved = JSON.parse(localStorage.getItem(COVER_KEY) || 'null');
+      if (saved) {
+        var s = CoverMaker.normalizeCoverSettings(saved);
+        $('cv-title').value = s.title;
+        $('cv-subtitle').value = s.subtitle;
+        $('cv-grade').value = s.grade;
+        $('cv-author').value = s.author;
+        $('cv-features').value = s.features;
+        setCoverTheme(s.theme);
+        restored = true;
+      }
+    } catch (e) { /* corrupted storage: fall through to defaults */ }
+    if (!restored) {
+      // start the cover from the Book Builder's own title/author
+      $('cv-title').value = $('bk-title').value;
+      $('cv-author').value = $('bk-author').value;
+    }
+    ['cv-title', 'cv-subtitle', 'cv-grade', 'cv-author', 'cv-features']
+      .forEach(function (id) { $(id).addEventListener('input', refreshCoverPreview); });
+    document.querySelectorAll('input[name="cv-theme"]').forEach(function (r) {
+      r.addEventListener('change', refreshCoverPreview);
+    });
+    // typing the book title/author keeps the cover in sync
+    $('bk-title').addEventListener('input', function () {
+      $('cv-title').value = $('bk-title').value;
+      refreshCoverPreview();
+    });
+    $('bk-author').addEventListener('input', function () {
+      $('cv-author').value = $('bk-author').value;
+      refreshCoverPreview();
+    });
+    // the "N worksheets inside" pill follows the book counts
+    MW.BOOK_TYPE_ORDER.forEach(function (type) {
+      var el = $('bk-count-' + type);
+      if (el) el.addEventListener('input', refreshCoverPreview);
+    });
+    $('cv-png').addEventListener('click', function () {
+      CoverMaker.downloadCoverPNG(currentCoverSettings(), {
+        size: $('bk-size').value, count: coverWorksheetCount()
+      });
+    });
+    refreshCoverPreview();
   }
 
   /* One worksheet tab: Generate / answer-key toggle / Print-PDF / PNG. */
